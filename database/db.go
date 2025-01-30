@@ -1,37 +1,30 @@
 package database
 
-import(
+import (
 	"database/sql"
 	"fmt"
-	"log"
-	"time"
-
 	"test_Task_New_server/config"
-
-	_ "github.com/lib/pq"  
+	"test_Task_New_server/logger" 
+	_ "github.com/lib/pq"
 )
 
-var DB *sql.DB
-
-func ConnectDB(cfg *config.Config) {
-	var err error
-
+func ConnectDB(cfg *config.Config) *sql.DB {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName)
 
-	DB, err = sql.Open("postgres", dsn)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		log.Fatalf("Не удалось подключиться к БД: %v", err)
+		logger.Log.Fatalf("Error connecting to DB: %v", err)
 	}
 
-	DB.SetMaxOpenConns(10)              
-	DB.SetMaxIdleConns(5)          
-	DB.SetConnMaxLifetime(30 * time.Minute) 
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(0)
 
-	
-	if err := DB.Ping(); err != nil {
-		log.Fatalf("Не удалось подключиться к БД: %v", err)
+	if err := db.Ping(); err != nil {
+		logger.Log.Fatalf("Failed to check connection to database: %v", err)
 	}
 
-	log.Println("Успешное подключение к базе данных!")
+	logger.Log.Info("Successful connection to the database!")
+	return db
 }
